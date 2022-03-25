@@ -1,6 +1,6 @@
 package com.dahua.dim
 
-import com.dahua.logBean.LogBean
+import com.dahua.bean.LogBean
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
@@ -80,7 +80,7 @@ object ZoneDimForRDDV2RedisCache {
 
 		sc.stop()
 
-
+		spark.stop()
 	}
 
 }

@@ -1,4 +1,4 @@
-package com.dahua.logBean
+package com.dahua.bean
 
 import com.dahua.utils.NumFormat
 
