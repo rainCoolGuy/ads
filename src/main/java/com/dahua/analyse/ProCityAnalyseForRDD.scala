@@ -1,9 +1,8 @@
 package com.dahua.analyse
 
-import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.util.{AccumulatorV2, LongAccumulator}
+import org.apache.spark.util.AccumulatorV2
 import org.apache.spark.{Partitioner, SparkConf, SparkContext}
 
 import scala.collection.mutable
@@ -104,14 +103,17 @@ object ProCityAnalyseForRDD {
 
 		override def merge(other: AccumulatorV2[String, mutable.Map[String, Int]]): Unit = {
 
-			other.value.foreach(
-				om => {
-					if (!map.contains(om._1)) {
-						index += 1
-						map.put(om._1, index)
+			val map1: mutable.Map[String, Int] = this.map
+			val map2: mutable.Map[String, Int] = other.value
+			map2.foreach {
+				case (k, v) => {
+					if (!map1.contains(k)) {
+						map.put(k, v)
+					} else {
+						map2(k) = map(k)
 					}
 				}
-			)
+			}
 		}
 
 		override def value: mutable.Map[String, Int] = map
