@@ -39,6 +39,7 @@ object AppMappingToRedis {
 			  iter => {
 				  val jedis: Jedis = RedisUtils.getJedis
 				  iter.foreach(mapping => {
+					  jedis.del(mapping._1)
 					  jedis.set(mapping._1, mapping._2)
 					  val str: String = jedis.get(mapping._1)
 					  println(str)

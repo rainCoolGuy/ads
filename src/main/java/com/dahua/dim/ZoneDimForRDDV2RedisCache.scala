@@ -1,15 +1,17 @@
 package com.dahua.dim
 
 import com.dahua.bean.LogBean
+import com.dahua.utils.RedisUtils
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
+import redis.clients.jedis.Jedis
 
 object ZoneDimForRDDV2RedisCache {
 
 	def main(args: Array[String]): Unit = {
-		if (args.length != 3) {
+		if (args.length != 2) {
 			println(
 				"""
 				  |缺少参数
@@ -27,25 +29,11 @@ object ZoneDimForRDDV2RedisCache {
 		import spark.implicits._
 
 		// 接收参数
-		var Array(inputPath, appMapping, outputPath) = args
+		var Array(inputPath, outputPath) = args
 
-		// 先读映射文件: appmapping
-		val appMap: Map[String, String] = sc
-		  .textFile(appMapping)
-		  .map(
-			  line => {
-				  val arr: Array[String] = line.split("[:]", -1)
-				  (arr(0), arr(1))
-			  }
-		  )
-		  .collect()
-		  .toMap
 
-		// 使用广播变量, 进行广播
-		val appBroadcast: Broadcast[Map[String, String]] = sc.broadcast(appMap)
-
-		val log: RDD[String] = sc.textFile(inputPath)
-		val logRDD: RDD[LogBean] = log
+		sc
+		  .textFile(inputPath)
 		  .map(_.split(",", -1))
 		  .filter(_.length >= 85)
 		  .map(LogBean(_))
@@ -54,29 +42,50 @@ object ZoneDimForRDDV2RedisCache {
 				  t.appid.nonEmpty
 			  }
 		  )
-		logRDD
-		  .map(
-			  log => {
-				  var appname: String = log.appname
-				  if (appname == "" || appname.isEmpty) {
-					  appname = appBroadcast.value.getOrElse(log.appid, "不明确")
-				  }
+		  .mapPartitions(
+			  iter => {
+				  var appName: String = ""
+				  var ysqqs: List[Double] = Nil
+				  val redis: Jedis = RedisUtils.getJedis
+				  val map: Iterator[(String, List[Double])] = iter.map(
+					  x => {
+						  appName = x.appname
+						  if (appName == "" || appName.isEmpty) {
+							  appName = redis.get(x.appid)
+							  println(x.appid)
+						  }
+						  ysqqs = DIMZhibiao.qqsRtp(x.requestmode, x.processnode)
 
-				  val ysqqs: List[Double] = DIMZhibiao.qqsRtp(log.requestmode, log.processnode)
-
-				  (appname, ysqqs)
+						  (appName, ysqqs)
+					  }
+				  )
+				  redis.close()
+				  map
 			  }
 		  )
 		  .reduceByKey(
 			  (list1, list2) => {
 				  list1.zip(list2)
 					.map(
-						x => {
-							x._1 + x._2
+						tup => {
+							tup._1 + tup._2
 						}
 					)
 			  }
 		  )
+		  .foreach(println)
+
+
+		//		  .reduceByKey(
+		//			  (list1, list2) => {
+		//				  list1.zip(list2)
+		//					.map(
+		//						x => {
+		//							x._1 + x._2
+		//						}
+		//					)
+		//			  }
+		//		  )
 
 		sc.stop()
 
