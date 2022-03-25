@@ -52,7 +52,6 @@ object ZoneDimForRDDV2RedisCache {
 						  appName = x.appname
 						  if (appName == "" || appName.isEmpty) {
 							  appName = redis.get(x.appid)
-							  println(x.appid)
 						  }
 						  ysqqs = DIMZhibiao.qqsRtp(x.requestmode, x.processnode)
 
@@ -75,20 +74,7 @@ object ZoneDimForRDDV2RedisCache {
 		  )
 		  .foreach(println)
 
-
-		//		  .reduceByKey(
-		//			  (list1, list2) => {
-		//				  list1.zip(list2)
-		//					.map(
-		//						x => {
-		//							x._1 + x._2
-		//						}
-		//					)
-		//			  }
-		//		  )
-
 		sc.stop()
-
 		spark.stop()
 	}
 
