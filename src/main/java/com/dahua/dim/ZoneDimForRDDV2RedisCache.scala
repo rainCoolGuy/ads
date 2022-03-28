@@ -2,9 +2,7 @@ package com.dahua.dim
 
 import com.dahua.bean.LogBean
 import com.dahua.utils.RedisUtils
-import org.apache.spark.broadcast.Broadcast
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf, SparkContext}
 import redis.clients.jedis.Jedis
 
@@ -51,7 +49,8 @@ object ZoneDimForRDDV2RedisCache {
 					  x => {
 						  appName = x.appname
 						  if (appName == "" || appName.isEmpty) {
-							  appName = redis.get(x.appid)
+							  if (x.appid == "") appName = "不明确"
+							  else appName = redis.get(x.appid)
 						  }
 						  ysqqs = DIMZhibiao.qqsRtp(x.requestmode, x.processnode)
 
