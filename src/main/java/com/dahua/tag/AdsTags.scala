@@ -12,7 +12,7 @@ object AdsTags extends TagTrait {
 		val row: Row = args(0).asInstanceOf[Row]
 
 		// 广告位类型
-		val adsPaceType: Int = row.getAs[Int]("asdpacetype")
+		val adsPaceType: Int = row.getAs[Int]("adspacetype")
 
 		if (adsPaceType > 9) {
 			map += "LC" + adsPaceType -> 1

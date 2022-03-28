@@ -10,7 +10,7 @@ object DriverTags extends TagTrait {
 		// 操作系统类型
 		val client: Int = row.getAs[Int]("client")
 		// 联网方式类型
-		val newWordMannerName: String = row.getAs[String]("newwordmannername")
+		val netWorkMannerName: String = row.getAs[String]("networkmannername")
 		// 设备运营商名称
 		val ispName: String = row.getAs[String]("ispname")
 
@@ -21,7 +21,7 @@ object DriverTags extends TagTrait {
 			case _ => map += "D00010004" -> 1
 		}
 
-		newWordMannerName match {
+		netWorkMannerName match {
 			case "WIFI" => map += "D00020001" -> 1
 			case "4G" => map += "D00020002" -> 1
 			case "3G" => map += "D00020003" -> 1
